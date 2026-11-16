@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>쑥쑥이 복약 도우미</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main class="stage">
+
+<!-- ===== 환자용 앱 화면 ===== -->
+<div class="phone" id="phone" data-screen="home">
+
+  <!-- 앱 맨 위 알림 -->
+  <div id="banner" class="banner" hidden>
+    <button type="button" class="banner-main" id="bannerMain">
+      <span class="banner-ic" id="bannerIc"></span>
+      <span class="banner-tx"><b>쑥쑥이</b><span id="bannerText"></span></span>
+    </button>
+    <button type="button" class="banner-x" id="bannerX" aria-label="알림 닫기">✕</button>
+  </div>
+  <div id="toast" class="toast" hidden role="status"></div>
+
+  <!-- 1 홈 -->
+  <section class="screen active" id="s-home">
+    <div class="home-greet">
+      <h1 id="homeHello"></h1>
+      <p class="big-sub" id="homeToday"></p>
+      <p class="home-names" id="homeNames"></p>
+    </div>
+    <div class="home-grid">
+      <button type="button" class="menu-card" data-go="medreg"><span class="mc-ic">💊</span><span>약물 등록</span></button>
+      <button type="button" class="menu-card" data-go="hosp"><span class="mc-ic">🏥</span><span>병원 등록</span></button>
+      <button type="button" class="plant-btn" id="homePlant" aria-label="복약 기록 보기"></button>
+      <button type="button" class="btn-orange" data-go="meds">나의 등록된 약물 보기</button>
+      <button type="button" class="menu-card" data-go="appt"><span class="mc-ic">📅</span><span>다음 진료 일정</span></button>
+      <button type="button" class="menu-card" data-go="care"><span class="mc-ic">🤝</span><span>보호자·의료진 연계</span></button>
+    </div>
+  </section>
+
+  <!-- 2 약물 등록 -->
+  <section class="screen" id="s-medreg">
+    <header class="topbar"><button type="button" class="back" data-go="home" aria-label="뒤로가기">←</button><h1>약물 정보 등록</h1></header>
+    <div id="regForm">
+      <ol class="steps3"><li>① 약 사진</li><li>② 처방전</li><li>③ 자동 입력</li></ol>
+      <button type="button" class="photo-box" id="photoBtn"><span class="photo-ic" id="photoIc">📷</span><span class="photo-tx">약물 사진을 찍어주세요</span></button>
+      <input type="file" id="photoInput" accept="image/*" capture="environment" hidden>
+      <button type="button" class="rx-btn" id="rxBtn"><span>📄</span><span>처방전을 촬영하면 입력이 돼요</span></button>
+      <input type="file" id="rxInput" accept="image/*" hidden>
+
+      <div class="field"><label class="q" for="medName">약물명</label><input id="medName" class="inp" type="text" autocomplete="off" placeholder="약 이름"></div>
+      <div class="field"><p class="q">한 번에 몇 정 드세요?</p><div class="opts" id="optDose"></div></div>
+      <div class="field"><p class="q">하루에 몇 번 드세요?</p><div class="opts" id="optPerDay"></div><input id="perDayInp" class="inp" type="number" min="1" max="10" inputmode="numeric" placeholder="몇 번" hidden></div>
+      <div class="field"><p class="q">언제 드세요?</p><div class="opts" id="optTimes"></div><input id="timeInp" class="inp" type="time" hidden></div>
+      <div class="field"><p class="q">며칠 동안 드세요?</p><div class="opts" id="optDays"></div><input id="daysInp" class="inp" type="number" min="1" max="365" inputmode="numeric" placeholder="며칠" hidden></div>
+      <p class="total" id="totalTxt"></p>
+      <p class="warn" id="regWarn" hidden></p>
+      <button type="button" class="btn-main" id="regBtn">등록하기</button>
+      <p class="hint">입력한 정보가 맞는지 확인해주세요.</p>
+    </div>
+    <div id="rxView" hidden></div>
+  </section>
+
+  <!-- 3 병원 등록 -->
+  <section class="screen" id="s-hosp">
+    <header class="topbar"><button type="button" class="back" data-go="home" aria-label="뒤로가기">←</button><h1>병원 등록</h1></header>
+    <div class="search"><span class="search-ic">🔍</span><input id="hospQ" class="inp" type="search" autocomplete="off" placeholder="다니는 병원을 검색해주세요"></div>
+    <div id="hospList"></div>
+    <div class="bottom-fix"><button type="button" class="btn-main" id="hospRegBtn" disabled>이 병원 등록하기</button></div>
+  </section>
+
+  <!-- 4 다음 외래 일정 -->
+  <section class="screen" id="s-appt">
+    <header class="topbar"><button type="button" class="back" data-go="home" aria-label="뒤로가기">←</button><h1>다음 외래 일정</h1></header>
+    <div class="cal-nav"><button type="button" class="round-btn" id="apPrev" aria-label="이전 달">‹</button><strong id="apMonth"></strong><button type="button" class="round-btn" id="apNext" aria-label="다음 달">›</button></div>
+    <div class="cal-dow" id="apDow"></div>
+    <div class="cal-grid" id="apGrid"></div>
+    <h2 class="sec">가장 가까운 진료 일정</h2>
+    <div id="apNearest"></div>
+    <div id="apList"></div>
+    <div class="bottom-fix"><button type="button" class="btn-main" id="apAdd">진료 일정 추가하기</button></div>
+  </section>
+
+  <!-- 5 보호자 연계 & 의료진 연계 -->
+  <section class="screen" id="s-care">
+    <header class="topbar"><button type="button" class="back" data-go="home" aria-label="뒤로가기">←</button><h1>보호자 연계 &amp; 의료진 연계</h1></header>
+    <div class="half" id="halfG">
+      <div class="half-head">
+        <h2>등록된 보호자</h2>
+        <button type="button" class="add-guard" id="gAddBtn"><span>👨‍👩‍👧</span><span>보호자 추가하기</span></button>
+      </div>
+      <form class="g-form" id="gForm" hidden autocomplete="off">
+        <input class="inp" id="gRel" list="relList" placeholder="환자와의 관계 (예: 아들)">
+        <datalist id="relList"><option value="아들"><option value="딸"><option value="배우자"><option value="며느리"><option value="사위"></datalist>
+        <input class="inp" id="gName" placeholder="보호자 이름">
+        <input class="inp" id="gPhone" type="tel" inputmode="tel" placeholder="전화번호">
+        <div class="row2"><button type="button" class="btn-neutral" id="gCancel">취소</button><button type="submit" class="btn-main">등록</button></div>
+      </form>
+      <div id="gList"></div>
+    </div>
+    <div class="half" id="halfH">
+      <div class="half-head"><h2>등록된 병원</h2></div>
+      <div id="hList"></div>
+    </div>
+  </section>
+
+  <!-- 6~8 챗봇 쑥쑥이 -->
+  <section class="screen chat-screen" id="s-chat">
+    <header class="topbar"><button type="button" class="back" data-go="home" aria-label="뒤로가기">←</button><h1>쑥쑥이</h1></header>
+    <div class="chat-list" id="chatList"></div>
+  </section>
+
+  <!-- 11 복약 기록 -->
+  <section class="screen" id="s-record">
+    <header class="topbar"><button type="button" class="back" data-go="home" aria-label="뒤로가기">←</button><h1>복약 기록</h1></header>
+    <div class="bubble-row">
+      <div class="plant-sm" id="recPlant"></div>
+      <div class="speech"><p id="recSay"></p><p class="grow-note" id="recGrow"></p><p class="grow-note" id="recStage"></p></div>
+    </div>
+    <div class="cal-nav"><button type="button" class="round-btn" id="rcPrev" aria-label="이전 달">‹</button><strong id="rcMonth"></strong><button type="button" class="round-btn" id="rcNext" aria-label="다음 달">›</button></div>
+    <div class="cal-dow" id="rcDow"></div>
+    <div class="cal-grid" id="rcGrid"></div>
+    <p class="hint-c">날짜를 누르면 약을 먹었는지 기록할 수 있어요.</p>
+    <hr class="divider">
+    <h2 class="ach-title"><button type="button" class="arrow" id="raPrev" aria-label="이전 주기">‹</button><span id="raTitle"></span><button type="button" class="arrow" id="raNext" aria-label="다음 주기">›</button></h2>
+    <p class="small c" id="raSub"></p>
+    <div class="ach-body">
+      <div class="ach-left">
+        <div class="ach-ic" id="raIc"></div>
+        <div class="ach-bar"><div class="bar"><i id="raBar"></i></div><p class="pct" id="raPct"></p></div>
+      </div>
+      <div class="ach-right"><div><b id="raDone"></b>복용완료</div><div><b id="raMiss"></b>미복용</div></div>
+    </div>
+  </section>
+
+  <!-- 10 내 식물 -->
+  <section class="screen" id="s-plant">
+    <header class="topbar"><button type="button" class="back" data-go="home" aria-label="뒤로가기">←</button></header>
+    <div class="week-head">
+      <button type="button" class="arrow" id="plPrev" aria-label="이전 주">‹</button>
+      <div class="c"><h2 id="plTitle"></h2><p class="small" id="plSub"></p></div>
+      <button type="button" class="arrow" id="plNextBtn" aria-label="다음 주">›</button>
+    </div>
+    <p class="big-num" id="plNum"></p>
+    <p class="big-pct" id="plPct"></p>
+    <div class="bar"><i id="plBar"></i></div>
+    <div class="dots" id="plDots"></div>
+    <button type="button" class="plant-lg" id="plPlant" aria-label="복약 기록으로 가기"></button>
+    <p class="stage-name" id="plStage"></p>
+    <p class="stage-next" id="plRemain"></p>
+  </section>
+
+  <!-- 9 부작용 상태 -->
+  <section class="screen" id="s-side">
+    <header class="topbar"><button type="button" class="back" data-go="home" aria-label="뒤로가기">←</button></header>
+    <div id="sideMain">
+      <h2 class="side-title">약을 드신 지 30분 지났어요. 지금 부작용 상태는 어떠세요?</h2>
+      <p class="side-guide">불편한 정도에 맞는 얼굴을 눌러 주세요</p>
+      <div class="scale" id="scale"></div>
+      <div class="scale-ends"><span>1 증상 없음</span><span>5 증상 매우 심함</span></div>
+      <div class="sel-line" id="selLine"></div>
+      <button type="button" class="btn-main" id="sideOk" disabled>선택 완료</button>
+    </div>
+    <div id="sideDone" class="done-box" hidden><p>답해 주셔서 감사합니다.</p><p>오늘 상태가 잘 기록되었어요.</p></div>
+  </section>
+
+  <!-- 12 나의 등록된 약물 -->
+  <section class="screen" id="s-meds">
+    <header class="topbar"><button type="button" class="back" data-go="home" aria-label="뒤로가기">←</button><h1>나의 등록된 약물</h1></header>
+    <div id="medList"></div>
+  </section>
+  <section class="screen" id="s-meddetail">
+    <header class="topbar"><button type="button" class="back" data-go="meds" aria-label="뒤로가기">←</button><h1>약물 정보</h1></header>
+    <div id="medDetail"></div>
+  </section>
+
+  <!-- 하단 탭 (9·10·11번에서만) -->
+  <nav class="tabbar" id="tabbar" hidden>
+    <button type="button" data-tab="record"><span class="tab-ic">📋</span><span>복약 기록</span></button>
+    <button type="button" data-tab="plant"><span class="tab-ic" id="tabPlantIc"></span><span>내 식물</span></button>
+    <button type="button" data-tab="side"><span class="tab-ic">😊</span><span>부작용 상태</span></button>
+  </nav>
+
+  <!-- 쑥쑥이 챗봇 버튼 (홈에서만) -->
+  <button type="button" class="chat-fab" id="chatFab" aria-label="쑥쑥이 챗봇"><span id="fabIc"></span><b>쑥쑥이</b></button>
+
+  <!-- 진료 일정 입력 -->
+  <div class="sheet" id="apSheet" hidden>
+    <div class="sheet-box">
+      <h2 id="apFormTitle">진료 일정 추가하기</h2>
+      <label for="apHosp">병원</label>
+      <input id="apHosp" class="inp" list="hospNames" placeholder="병원 이름" autocomplete="off">
+      <datalist id="hospNames"></datalist>
+      <label for="apDate">날짜</label>
+      <input id="apDate" class="inp" type="date">
+      <div class="time-wrap">
+        <button type="button" class="timebtn" id="apTimeBtn">진료 시간</button>
+        <input id="apTime" class="time-hidden" type="time" tabindex="-1" aria-hidden="true">
+      </div>
+      <label for="apDept">진료과</label>
+      <input id="apDept" class="inp" placeholder="진료과" autocomplete="off">
+      <div class="row2"><button type="button" class="btn-neutral" id="apCancel">취소</button><button type="button" class="btn-main" id="apSave">저장</button></div>
+    </div>
+  </div>
+
+  <!-- 복약 기록 팝업 / 성장 팝업 / 완료 창 -->
+  <div class="overlay" id="dayOv" hidden><div class="pop" id="dayPop"></div></div>
+  <div class="overlay" id="growOv" hidden>
+    <div class="pop">
+      <h2 id="growTx"></h2>
+      <div class="grow-plant" id="growPlant"></div>
+      <button type="button" class="btn-main" id="growOk">확인</button>
+    </div>
+  </div>
+  <div class="overlay" id="checkOv" hidden><div class="ov-box"><div class="ov-check">✓</div><p id="checkMsg"></p></div></div>
+</div>
+
+<!-- ===== 환자 화면과 분리된 영역 ===== -->
+<section class="panel" id="guardianBox">
+  <h2>보호자용 화면</h2>
+  <div id="guardianList"></div>
+</section>
+
+<section class="panel" id="staffBox">
+  <h2>의료진용 화면</h2>
+  <div id="staffList"></div>
+</section>
+
+<section class="panel admin">
+  <h2>관리자용 패널</h2>
+  <button type="button" class="btn-orange" id="admMed">지금 약 먹을 시간 알림 띄우기</button>
+  <button type="button" class="btn-neutral" id="admRec">복약기록 처음 상태로 초기화</button>
+  <button type="button" class="btn-red" id="admAll">모든 내용 초기화</button>
+  <p class="small" id="adminMsg" role="status"></p>
+</section>
+
+</main>
+<script src="script.js"></script>
+</body>
+</html>
